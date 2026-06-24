@@ -83,6 +83,44 @@ final allInventoryItemsProvider =
 // ignore: unused_element
 typedef AllInventoryItemsRef =
     AutoDisposeStreamProviderRef<List<InventoryItemWithCategories>>;
+String _$suggestedMealsHash() => r'4679d35c2b15ff15e0dc36c34019d16b48586367';
+
+/// See also [suggestedMeals].
+@ProviderFor(suggestedMeals)
+final suggestedMealsProvider =
+    AutoDisposeStreamProvider<List<RecipeWithAvailability>>.internal(
+      suggestedMeals,
+      name: r'suggestedMealsProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$suggestedMealsHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SuggestedMealsRef =
+    AutoDisposeStreamProviderRef<List<RecipeWithAvailability>>;
+String _$recentRecipesHash() => r'6a62688b46e9ed2a9696a9107270854dedece3ed';
+
+/// See also [recentRecipes].
+@ProviderFor(recentRecipes)
+final recentRecipesProvider =
+    AutoDisposeStreamProvider<List<RecipeWithIngredients>>.internal(
+      recentRecipes,
+      name: r'recentRecipesProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$recentRecipesHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef RecentRecipesRef =
+    AutoDisposeStreamProviderRef<List<RecipeWithIngredients>>;
 String _$dashboardSectionsHash() => r'5c93009f19d004d1d87ed243ba9f0f5882540c69';
 
 /// See also [DashboardSections].

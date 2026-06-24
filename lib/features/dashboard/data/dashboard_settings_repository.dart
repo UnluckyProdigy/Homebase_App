@@ -37,6 +37,8 @@ class DashboardSettingsRepository {
     DashboardSection(id: 'quick_actions', label: 'Quick Actions', visible: true),
     DashboardSection(id: 'low_stock', label: 'Low Stock Items', visible: true),
     DashboardSection(id: 'expiring', label: 'Expiring Soon', visible: true),
+    DashboardSection(id: 'suggested_meals', label: 'Suggested Meals', visible: true),
+    DashboardSection(id: 'recent_recipes', label: 'Recipes', visible: true),
   ];
 
   DashboardSettingsRepository(this._db);

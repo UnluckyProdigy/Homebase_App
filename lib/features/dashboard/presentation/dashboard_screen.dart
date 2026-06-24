@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/widgets/icon_helper.dart';
 import '../../inventory/data/inventory_repository.dart';
+import '../../recipes/data/recipe_repository.dart';
+import '../../recipes/presentation/widgets/availability_badge.dart';
 import '../providers/dashboard_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -22,6 +24,8 @@ class DashboardScreen extends ConsumerWidget {
     final allItemsAsync = ref.watch(allInventoryItemsProvider);
     final lowStockAsync = ref.watch(lowStockItemsProvider);
     final expiringAsync = ref.watch(expiringSoonItemsProvider);
+    final suggestedMealsAsync = ref.watch(suggestedMealsProvider);
+    final recentRecipesAsync = ref.watch(recentRecipesProvider);
     final sectionsAsync = ref.watch(dashboardSectionsProvider);
     final sections = sectionsAsync.valueOrNull;
 
@@ -32,7 +36,7 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.tune),
             tooltip: 'Customize Dashboard',
-            onPressed: () => context.push('/dashboard/customize'),
+            onPressed: () => context.push('/more/settings'),
           ),
         ],
       ),
@@ -155,6 +159,44 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
 
+            // Suggested meals section
+            if (_isSectionVisible(sections, 'suggested_meals')) ...[
+              const SizedBox(height: 16),
+              suggestedMealsAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+                data: (suggestions) => _PreviewWindow(
+                  icon: Icons.restaurant_menu,
+                  iconColor: Colors.deepOrange,
+                  title: 'Suggested Meals',
+                  itemCount: suggestions.length,
+                  emptyMessage: 'No meal suggestions yet',
+                  items: suggestions,
+                  itemBuilder: (rwa) => _SuggestedMealTile(rwa: rwa),
+                  onSeeAll: () => context.push('/recipes/suggestions'),
+                ),
+              ),
+            ],
+
+            // Recent recipes section
+            if (_isSectionVisible(sections, 'recent_recipes')) ...[
+              const SizedBox(height: 16),
+              recentRecipesAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+                data: (recipes) => _PreviewWindow(
+                  icon: Icons.menu_book,
+                  iconColor: Colors.indigo,
+                  title: 'Recipes',
+                  itemCount: recipes.length,
+                  emptyMessage: 'No recipes yet',
+                  items: recipes,
+                  itemBuilder: (rw) => _RecentRecipeTile(rw: rw),
+                  onSeeAll: () => context.go('/recipes'),
+                ),
+              ),
+            ],
+
             // Empty state (only when everything is empty and no sections hidden)
             allItemsAsync.when(
               loading: () => const SizedBox.shrink(),
@@ -191,17 +233,18 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _PreviewWindow extends StatelessWidget {
+class _PreviewWindow<T> extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
   final int itemCount;
   final String emptyMessage;
-  final List<InventoryItemWithCategories> items;
-  final Widget Function(InventoryItemWithCategories) itemBuilder;
+  final List<T> items;
+  final Widget Function(T) itemBuilder;
   final VoidCallback onSeeAll;
 
   const _PreviewWindow({
+    super.key,
     required this.icon,
     required this.iconColor,
     required this.title,
@@ -222,34 +265,41 @@ class _PreviewWindow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor, size: 20),
-                const SizedBox(width: 8),
-                Text(title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold)),
-                const Spacer(),
-                if (itemCount > 0)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+          InkWell(
+            onTap: onSeeAll,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, color: iconColor, size: 20),
+                  const SizedBox(width: 8),
+                  Text(title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  if (itemCount > 0)
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text('$itemCount',
+                          style: TextStyle(
+                              color: iconColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12)),
                     ),
-                    child: Text('$itemCount',
-                        style: TextStyle(
-                            color: iconColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12)),
-                  ),
-              ],
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right,
+                      size: 18,
+                      color: colorScheme.onSurface.withValues(alpha: 0.4)),
+                ],
+              ),
             ),
           ),
 
@@ -311,24 +361,28 @@ class _SummaryCard extends StatelessWidget {
               value: '$totalItems',
               color: colorScheme.primary,
               icon: Icons.inventory_2,
+              onTap: () => context.go('/inventory'),
             ),
             _StatColumn(
               label: 'Low Stock',
               value: '$lowStock',
               color: Colors.orange[700]!,
               icon: Icons.warning_amber,
+              onTap: () => context.go('/inventory'),
             ),
             _StatColumn(
               label: 'Out of Stock',
               value: '$outOfStock',
               color: colorScheme.error,
               icon: Icons.error_outline,
+              onTap: () => context.go('/inventory'),
             ),
             _StatColumn(
               label: 'Expiring',
               value: '$expiring',
               color: Colors.red[700]!,
               icon: Icons.schedule,
+              onTap: () => context.go('/inventory'),
             ),
           ],
         ),
@@ -342,26 +396,35 @@ class _StatColumn extends StatelessWidget {
   final String value;
   final Color color;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const _StatColumn({
     required this.label,
     required this.value,
     required this.color,
     required this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -430,6 +493,104 @@ class _DashboardItemTile extends StatelessWidget {
       subtitle: Text(subtitle,
           style: TextStyle(color: subtitleColor, fontSize: 12)),
       onTap: () => context.push('/inventory/detail/${item.id}'),
+    );
+  }
+}
+
+class _SuggestedMealTile extends StatelessWidget {
+  final RecipeWithAvailability rwa;
+
+  const _SuggestedMealTile({required this.rwa});
+
+  @override
+  Widget build(BuildContext context) {
+    final recipe = rwa.recipe;
+
+    final expiringNames = rwa.ingredients
+        .where((i) =>
+            i.inventoryItem?.expirationDate != null &&
+            i.inventoryItem!.expirationDate!
+                    .difference(DateTime.now())
+                    .inDays <=
+                7 &&
+            i.status == IngredientStatus.inStock)
+        .map((i) => i.ingredient.name)
+        .toList();
+
+    return ListTile(
+      dense: true,
+      leading: CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.deepOrange.withValues(alpha: 0.15),
+        child: const Icon(Icons.restaurant_menu,
+            color: Colors.deepOrange, size: 16),
+      ),
+      title: Text(recipe.name, style: const TextStyle(fontSize: 14)),
+      subtitle: expiringNames.isNotEmpty
+          ? Text('Uses expiring: ${expiringNames.join(', ')}',
+              style: TextStyle(fontSize: 11, color: Colors.orange[700]))
+          : null,
+      trailing: AvailabilityBadge(
+        status: rwa.status,
+        missingCount: rwa.missingCount,
+      ),
+      onTap: () => context.push('/recipes/detail/${recipe.id}'),
+    );
+  }
+}
+
+class _RecentRecipeTile extends StatelessWidget {
+  final RecipeWithIngredients rw;
+
+  const _RecentRecipeTile({required this.rw});
+
+  @override
+  Widget build(BuildContext context) {
+    final recipe = rw.recipe;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final difficultyColor = switch (recipe.difficulty) {
+      'easy' => Colors.green,
+      'medium' => Colors.orange,
+      'hard' => Colors.red,
+      _ => Colors.grey,
+    };
+
+    return ListTile(
+      dense: true,
+      leading: CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.indigo.withValues(alpha: 0.15),
+        child: const Icon(Icons.menu_book, color: Colors.indigo, size: 16),
+      ),
+      title: Text(recipe.name, style: const TextStyle(fontSize: 14)),
+      subtitle: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: difficultyColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              recipe.difficulty[0].toUpperCase() +
+                  recipe.difficulty.substring(1),
+              style: TextStyle(fontSize: 10, color: difficultyColor),
+            ),
+          ),
+          if (rw.totalTimeDisplay.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Text(rw.totalTimeDisplay,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5))),
+          ],
+        ],
+      ),
+      trailing: recipe.isFavorite
+          ? const Icon(Icons.favorite, size: 16, color: Colors.red)
+          : null,
+      onTap: () => context.push('/recipes/detail/${recipe.id}'),
     );
   }
 }

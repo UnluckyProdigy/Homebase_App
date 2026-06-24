@@ -37,3 +37,12 @@ enum AlertType {
   final String label;
   const AlertType(this.label);
 }
+
+enum RecipeDifficulty {
+  easy('Easy'),
+  medium('Medium'),
+  hard('Hard');
+
+  final String label;
+  const RecipeDifficulty(this.label);
+}

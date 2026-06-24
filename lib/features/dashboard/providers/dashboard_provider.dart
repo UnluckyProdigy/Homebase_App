@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../main.dart';
 import '../../inventory/data/inventory_repository.dart';
+import '../../recipes/data/recipe_repository.dart';
 import '../data/dashboard_settings_repository.dart';
 
 part 'dashboard_provider.g.dart';
@@ -46,4 +47,18 @@ Stream<List<InventoryItemWithCategories>> allInventoryItems(
     AllInventoryItemsRef ref) {
   final repo = InventoryRepository(database);
   return repo.watchAllItems();
+}
+
+@riverpod
+Stream<List<RecipeWithAvailability>> suggestedMeals(
+    SuggestedMealsRef ref) {
+  final repo = RecipeRepository(database);
+  return repo.watchMealSuggestions();
+}
+
+@riverpod
+Stream<List<RecipeWithIngredients>> recentRecipes(
+    RecentRecipesRef ref) {
+  final repo = RecipeRepository(database);
+  return repo.watchAllRecipes();
 }

@@ -65,6 +65,38 @@ class AlertHistory extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
+class Recipes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get description => text().nullable()();
+  TextColumn get instructions => text()();
+  IntColumn get servings => integer().withDefault(const Constant(1))();
+  IntColumn get prepTimeMinutes => integer().nullable()();
+  IntColumn get cookTimeMinutes => integer().nullable()();
+  TextColumn get difficulty =>
+      text().withDefault(const Constant('easy'))();
+  BoolColumn get isFavorite =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get tags => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime)();
+}
+
+class RecipeIngredients extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get recipeId => integer().references(Recipes, #id,
+      onDelete: KeyAction.cascade)();
+  IntColumn get inventoryItemId => integer().nullable().references(
+      InventoryItems, #id,
+      onDelete: KeyAction.setNull)();
+  TextColumn get name => text()();
+  RealColumn get quantity => real().withDefault(const Constant(1.0))();
+  TextColumn get unit => text().withDefault(const Constant('item'))();
+}
+
 class AppSettings extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
@@ -73,14 +105,21 @@ class AppSettings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(
-    tables: [Categories, InventoryItems, AutomationRules, AlertHistory, AppSettings])
+@DriftDatabase(tables: [
+  Categories,
+  InventoryItems,
+  AutomationRules,
+  AlertHistory,
+  AppSettings,
+  Recipes,
+  RecipeIngredients,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'homebase_db');

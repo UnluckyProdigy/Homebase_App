@@ -31,7 +31,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           IconButton(
             icon: const Icon(Icons.category),
             tooltip: 'Manage Categories',
-            onPressed: () => context.go('/inventory/categories'),
+            onPressed: () => context.push('/more/categories'),
           ),
         ],
       ),
