@@ -1,4 +1,4 @@
-package com.homebase.homebase
+package com.unluckyprodigy.homebase
 
 import io.flutter.embedding.android.FlutterActivity
 
