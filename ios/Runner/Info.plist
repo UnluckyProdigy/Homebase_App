@@ -33,6 +33,12 @@
 		<string>fetch</string>
 		<string>processing</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.unluckyprodigy.homebase.background</string>
+		<string>be.tramckrijte.workmanagerExample.iOSBackgroundAppRefresh</string>
+		<string>be.tramckrijte.workmanagerExample.iOSBackgroundProcessingTask</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
